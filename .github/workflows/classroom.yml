@@ -1,0 +1,37 @@
+name: Autograding Tests
+'on':
+- push
+- repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Functional
+      id: functional
+      uses: classroom-resources/autograding-io-grader@v1
+      with:
+        test-name: Functional
+        setup-command: gcc main.c -o main
+        command: "./main"
+        input: ''
+        expected-output: "^Welcome to the guessing game!\\s*The object of the game
+          is to guess the secret number.\\s*You get (?:\\d+|<xx>) chances for that.\\s*To
+          address you personally, I would like to know your name.\\s*What is your
+          name: <will be added>\\s*Great .+, let's get started.\\s*There is a secret
+          number between 0 and 100, what is your first try:$"
+        comparison-method: regex
+        timeout: 2
+        max-score: 10
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        FUNCTIONAL_RESULTS: "${{steps.functional.outputs.result}}"
+      with:
+        runners: functional
